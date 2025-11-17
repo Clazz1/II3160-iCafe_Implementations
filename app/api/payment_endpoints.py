@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from app.application.services.payment_service import PaymentService
+from app.apps.services.payment_service import PaymentService
 from app.infrastructure.repositories.invoice_inmemory import InMemoryInvoiceRepository
 from app.schemas.payment_schemas import (
     InvoiceCreateRequest,
