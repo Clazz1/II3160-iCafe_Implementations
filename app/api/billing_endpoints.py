@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from app.apps.services.billing_service import BillingService
 from app.infrastructure.repositories.session_inmemory import InMemorySessionRepository
@@ -9,6 +9,8 @@ from app.schemas.billing_schemas import (
     SessionFinishRequest,
     SessionResponse,
 )
+from app.middleware.auth import get_current_active_user
+from app.domain.user_aggregate import User
 
 router = APIRouter(prefix="/sessions", tags=["billing / sessions"])
 
@@ -36,7 +38,10 @@ def to_response(s) -> SessionResponse:
 
 
 @router.post("", response_model=SessionResponse)
-def start_session(payload: SessionCreateRequest):
+def start_session(
+    payload: SessionCreateRequest,
+    current_user: User = Depends(get_current_active_user)
+):
     s = _billing_service.start_session(
         customer_id=payload.customer_id,
         workstation_id=payload.workstation_id,
@@ -46,7 +51,11 @@ def start_session(payload: SessionCreateRequest):
 
 
 @router.post("/{session_id}/finish", response_model=SessionResponse)
-def finish_session(session_id: str, payload: SessionFinishRequest):
+def finish_session(
+    session_id: str, 
+    payload: SessionFinishRequest,
+    current_user: User = Depends(get_current_active_user)
+):
     try:
         s = _billing_service.finish_and_bill(
             session_id=session_id,
@@ -59,5 +68,5 @@ def finish_session(session_id: str, payload: SessionFinishRequest):
 
 
 @router.get("", response_model=list[SessionResponse])
-def list_sessions():
+def list_sessions(current_user: User = Depends(get_current_active_user)):
     return [to_response(s) for s in _billing_service.list_sessions()]

@@ -1,3 +1,6 @@
-python
 fastapi
 uvicorn
+pyjwt
+passlib[bcrypt]
+python-multipart
+email-validator

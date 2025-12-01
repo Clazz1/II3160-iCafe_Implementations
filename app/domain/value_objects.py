@@ -46,6 +46,17 @@ class PaymentStatus(str, Enum):
     FAILED = "FAILED"
 
 
+class UserRole(str, Enum):
+    CUSTOMER = "CUSTOMER"
+    ADMIN = "ADMIN"
+
+
+class UserStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    SUSPENDED = "SUSPENDED"
+
+
 # ===== VALUE OBJECTS =====
 
 @dataclass(frozen=True)

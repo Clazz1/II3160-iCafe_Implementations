@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from app.apps.services.reservation_service import ReservationService
 from app.infrastructure.repositories.reservation_inmemory import (
@@ -10,6 +10,8 @@ from app.schemas.reservation_schemas import (
     ReservationCreateRequest,
     ReservationResponse,
 )
+from app.middleware.auth import get_current_active_user
+from app.domain.user_aggregate import User
 
 router = APIRouter(prefix="/reservations", tags=["reservations"])
 
@@ -32,7 +34,10 @@ def to_response(r) -> ReservationResponse:
 
 
 @router.post("", response_model=ReservationResponse)
-def create_reservation(payload: ReservationCreateRequest):
+def create_reservation(
+    payload: ReservationCreateRequest,
+    current_user: User = Depends(get_current_active_user)
+):
     reservation = _reservation_service.create_reservation(
         customer_id=payload.customer_id,
         workstation_id=payload.workstation_id,
@@ -46,12 +51,15 @@ def create_reservation(payload: ReservationCreateRequest):
 
 
 @router.get("", response_model=list[ReservationResponse])
-def list_reservations():
+def list_reservations(current_user: User = Depends(get_current_active_user)):
     return [to_response(r) for r in _reservation_service.list_reservations()]
 
 
 @router.post("/{reservation_id}/check-in", response_model=ReservationResponse)
-def check_in(reservation_id: str):
+def check_in(
+    reservation_id: str, 
+    current_user: User = Depends(get_current_active_user)
+):
     try:
         r = _reservation_service.check_in(reservation_id)
     except KeyError:

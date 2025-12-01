@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from app.apps.services.payment_service import PaymentService
 from app.infrastructure.repositories.invoice_inmemory import InMemoryInvoiceRepository
@@ -9,6 +9,8 @@ from app.schemas.payment_schemas import (
     PayInvoiceRequest,
     InvoiceResponse,
 )
+from app.middleware.auth import get_current_active_user
+from app.domain.user_aggregate import User
 
 router = APIRouter(prefix="/invoices", tags=["payment / invoices"])
 
@@ -32,7 +34,10 @@ def to_response(inv) -> InvoiceResponse:
 
 
 @router.post("", response_model=InvoiceResponse)
-def create_invoice(payload: InvoiceCreateRequest):
+def create_invoice(
+    payload: InvoiceCreateRequest,
+    current_user: User = Depends(get_current_active_user)
+):
     inv = _payment_service.create_invoice(
         bill_id=payload.bill_id,
         customer_id=payload.customer_id,
@@ -44,7 +49,11 @@ def create_invoice(payload: InvoiceCreateRequest):
 
 
 @router.post("/{invoice_id}/pay", response_model=InvoiceResponse)
-def pay_invoice(invoice_id: str, payload: PayInvoiceRequest):
+def pay_invoice(
+    invoice_id: str, 
+    payload: PayInvoiceRequest,
+    current_user: User = Depends(get_current_active_user)
+):
     try:
         inv = _payment_service.pay_invoice(invoice_id=invoice_id, method=payload.method)
     except KeyError:
@@ -53,5 +62,5 @@ def pay_invoice(invoice_id: str, payload: PayInvoiceRequest):
 
 
 @router.get("", response_model=list[InvoiceResponse])
-def list_invoices():
+def list_invoices(current_user: User = Depends(get_current_active_user)):
     return [to_response(i) for i in _payment_service.list_invoices()]
