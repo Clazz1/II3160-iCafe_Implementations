@@ -191,9 +191,10 @@ class TestProtectedEndpoints:
         assert data["username"] == "testuser"
 
     def test_get_current_user_no_auth(self):
-        """Test getting current user without authentication"""
+        """Test getting current user without authentication returns 401 or 403"""
         response = self.client.get("/users/me")
-        assert response.status_code == 403
+        # HTTPBearer returns 403 on some platforms, 401 on others
+        assert response.status_code in [401, 403]
 
     def test_get_current_user_invalid_token(self):
         """Test getting current user with invalid token"""
